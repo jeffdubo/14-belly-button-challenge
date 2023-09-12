@@ -6,17 +6,17 @@ const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/
 // Promise Pending
 const dataPromise = d3.json(url);
 
-// Fetch the JSON data and log it for review
+// Fetch the JSON data and log for review
 d3.json(url).then(function(jsonData) {
-    // Display JSON data for review
+    // Log JSON data for review
     console.log('JSON Data: ', jsonData);
 
-    // Store JSON data in variables
+    // Store JSON data in separate variables
     metadata = jsonData.metadata;
     names = jsonData.names;
     samples = jsonData.samples;
 
-    // Log first row of data in variables for review/testing
+    // Log first row of data in variables for review
     console.log('First metadata:', metadata[0]);
     console.log('First name:', names[0]);
     console.log('First sample:', samples[0]);
@@ -24,10 +24,10 @@ d3.json(url).then(function(jsonData) {
     // Call functions to create and initiatize dashboard items
     createSubjectDropDown(names);
     createDemoInfo(metadata[0]);
-    plotBar(samples[0]);
-    plotBubble(samples[0]);
+    createBarChart(samples[0]);
+    createBubbleChart(samples[0]);
     createGauge(metadata[0]);
-    testGauge(metadata[0]);
+    updateGauge(metadata[0]);
 
     // Function used to determine the largest OTU ID to create formula to calculate the color of a bubble
     // getMaxID(samples)
@@ -35,23 +35,24 @@ d3.json(url).then(function(jsonData) {
 
 // Event handler for subject ID dropdown menu
 function optionChanged(newSubject) {
-    
+
     // Create variables to store data on new subject
     let new_metadata = metadata.filter(function(metadata) { return metadata.id === parseInt(newSubject); });
-    let new_samples = samples.filter(function(samples) { return samples.id === newSubject; });
+    let new_sample = samples.filter(function(samples) { return samples.id === newSubject; });
     
     // Log new data for review/testing
     console.log('New metadata: ', new_metadata[0]);
-    console.log('New samples: ', new_samples[0]);
+    console.log('New samples: ', new_sample[0]);
 
     // Update all charts and information for the new subject
+    // Note: [0] is needed as the filter creates a list for the results 
     updateDemoInfo(new_metadata[0]);
-    updateBar(new_samples[0]);
-    updateBubble(new_samples[0]);
+    updateBarChart(new_sample[0]);
+    updateBubbleChart(new_sample[0]);
     updateGauge(new_metadata[0]);
 }
 
-// Functiion to determine the largest OTU ID
+// Function to determine the largest OTU ID
 function getMaxID(samples) {
 
     // Create variable to store the largest OTU ID
@@ -74,10 +75,10 @@ function getMaxID(samples) {
 // Function to add items to the test subject ID dropdown menu.
 function createSubjectDropDown(names) {
     
-    // Loop through all names/IDs and add drop down menu for selecting a test subject
+    // Loop through all names/IDs and add drop down menu option for each test subject
     for(let i=0; i<names.length; i++) {
         option = names[i]; 
-        // Add option element with ID#s as displayed text and value for updating charts/info 
+        // Add option element with ID number displayed and set as value to reference for updating charts/info 
         d3.select('select').append('option').text(option).attr('value', option);
     };
 }
@@ -92,12 +93,12 @@ function createDemoInfo(metadata) {
 
     // Loop through all of the keys
     for (let i=0; i<keys.length; i++) {
-        // Add an element with a unique ID to display each key and value
+        // Add an element with a unique element id to display each key and value
         demoDiv.append('p').text(keys[i] + ': ' + values[i]).attr('id', 'meta-'+ keys[i]);
     };
 }
 
-// Function to update demographic info when the test subject ID is changed
+// Function to update demographic info when the test subject is changed
 function updateDemoInfo(metadata) {
 
     // Find div element for demographic information and get keys and values from metadata
@@ -112,13 +113,13 @@ function updateDemoInfo(metadata) {
     };
 }
 
-// Function to get information for the data variable for the horizontal bar and bubble charts
-function getChartInfo(subjectSamples, type) {
+// Function to get information to set data variable for the horizontal bar and bubble charts
+function getChartInfo(sample, type) {
     
-    let otu_ids = subjectSamples.otu_ids;
-    let otu_labels =  subjectSamples.otu_labels;
-    let sample_values = subjectSamples.sample_values;
-    let labels_otu_ids = []; // used for y axis labels for horizontal bar chart
+    let otu_ids = sample.otu_ids;
+    let otu_labels =  sample.otu_labels;
+    let sample_values = sample.sample_values;
+    let otu_id_labels = []; // used for y axis labels for horizontal bar chart
 
     if (type === 'bar') {
         
@@ -127,26 +128,29 @@ function getChartInfo(subjectSamples, type) {
         otu_labels = otu_labels.slice(0, 10).reverse();
         sample_values = sample_values.slice(0, 10).reverse();
         
-        // Create labels for horizontal chart
+        // Create labels for horizontal bar chart
         for(let i=0; i<10; i++) {
-            labels_otu_ids.push('OTU ' + otu_ids[i]);
+            // Add label to array. Label formatted as 'OTU {otu_ids}', ex: 'OTU 940'
+            otu_id_labels.push('OTU ' + otu_ids[i]);
         };
     };
-
-    temp_otu_labels = []
+    
+    // Create variable and store label items in a list format instead one line with semicolons 
+    otu_labels_formatted = []
     for (i=0; i<otu_labels.length; i++) {
-        temp_otu_labels.push(String(otu_labels[i]).replaceAll(';','</br>'));
+        otu_labels_formatted.push(String(otu_labels[i]).replaceAll(';','</br>'));
     }
-
-    otu_labels = temp_otu_labels;
+    
+    // Reset label variable to new temp variable
+    otu_labels = otu_labels_formatted;
 
     // Code reference: https://www.javascripttutorial.net/javascript-return-multiple-values/
-    return {otu_ids, otu_labels, sample_values, labels_otu_ids};
+    return {otu_ids, otu_labels, sample_values, otu_id_labels};
 };
 
 // Array of colors for bubble chart
 // Code reference: https://htmlcolorcodes.com
-colorArray = [
+bubbleColors = [
     '#532D9C', '#382D9C', '#2D3A9C', '#2D489C', '#2D5F9C', '#2D709C', '#2D7F9C', '#2D959C', '#2D9C90', '#2D9C7E',
     '#2D9C6B', '#2D9C57', '#2D9C41', '#2D9C30', '#459C2D', '#579C2D', '#6B9C2D', '#779C2D', '#8B9C2D', '#9C992D',
     '#9C8D2D', '#9C812D', '#9C742D', '#9C742D', '#9C572D', '#9C4D2D', '#9C412D', '#9C342D', '#9C2D3C', '#9C2D4B',
@@ -154,69 +158,81 @@ colorArray = [
 ];
 
 // Function to get the colors of all bubble based on the otu_ids
-function getBubbleColors(otu_ids) {
+function getBubbleChartColors(otu_ids) {
     
-    // Create an array to hold colors of all otu_id
+    // Create an array to hold colors of otu_ids
     otu_colors = [];
 
-    // Loop through ids and each hex code to the array
+    // Loop through each id
     for (i=0; i<otu_ids.length; i++) {
-        // The max ID is 3450 and there are 40 colors available. Dividing by 88 ensures the largest index is 39
-        otu_colors.push(colorArray[Math.round(otu_ids[i] / 88)]); // 
+        // Calculate color and add to array of colors
+        // Note: The otu_id the max ID (3450) divided by the last color array index (39) is 88
+        // Dividing by 88 ensures the calculation is a valid array index and sets the color based on the otu_id
+        otu_colors.push(bubbleColors[Math.round(otu_ids[i] / 88)]); 
     };
 
     return otu_colors;
 }
 
 // Function to initially plot the horizontal bar chart
-function plotBar(samples) {
+function createBarChart(sample) {
 
     // Get information needed to create chart
-    let info = getChartInfo(samples, 'bar');
+    let info = getChartInfo(sample, 'bar');
 
+    // Create data variable for plotting charts
     let data = [{
         x: info.sample_values,
-        y: info.labels_otu_ids,
+        y: info.otu_id_labels,
         text: info.otu_labels,
         type: 'bar',
         orientation: 'h'
     }];
 
-    console.log('Bar Chart Data:', data)
+    // Log data for review
+    console.log('Initial Bar Chart Data:', data)
      
     let layout = {
-        height: 600,
-        width: 400
+        height: 500,
+        width: 500,
+        margin: {
+            l: 120, // Create gap between demographic info and chart,
+            t: 0, // Align chart with top of subject drop down
+            b: 25 // Reduce gap with bubble chart
+        }
     };
 
     // Plot chart
     Plotly.newPlot('bar', data, layout);
 }
 
-// Function to initially plot the bubble chart
-function plotBubble(samples) {
+// Function to create the bubble chart
+function createBubbleChart(sample) {
 
     // Get information needed to create chart
-    let info = getChartInfo(samples, 'bubble');
-    // let text = String(info.otu_labels).replaceAll(';', '</br>');
-
+    let info = getChartInfo(sample, 'bubble');
+   
     let data = [{
         x: info.otu_ids,
         y: info.sample_values,
         text: info.otu_labels,
         mode: 'markers',
         marker: {
-            color: getBubbleColors(info.otu_ids),
+            color: getBubbleChartColors(info.otu_ids),
             opacity: .75,
             size: info.sample_values 
         }
     }];
 
-    console.log('Bubble Chart Data:', data)
+    // Log data for review
+    console.log('Initial Bubble Chart Data:', data)
 
     let layout = {
-        height: 900,
+        height: 500,
         width: 1200,
+        margin: {
+            t: 25
+        },
         showlegend: false,
     };
 
@@ -225,27 +241,28 @@ function plotBubble(samples) {
 }
 
 // Function to update horizontal bar chart when test subject is changed
-function updateBar(new_samples) {
+function updateBarChart(sample) {
     
-    let info = getChartInfo(new_samples, 'bar');
+    let info = getChartInfo(sample, 'bar');
     
     let update = [{
         x: info.sample_values,
-        y: info.labels_otu_ids,
+        y: info.otu_id_labels,
         text: info.otu_labels,
         type: 'bar',
         orientation: 'h'
     }];
     
     // Update chart
+    // Note: Restyling the chart requir
     Plotly.react('bar', update);
 }
 
 // Function to update bubble chart when test subject is changed
-function updateBubble(new_samples) {
+function updateBubbleChart(sample) {
 
     // Get information needed to create chart
-    info = getChartInfo(new_samples, 'bubble');
+    info = getChartInfo(sample, 'bubble');
 
     let update = [{
         x: info.otu_ids,
@@ -253,7 +270,7 @@ function updateBubble(new_samples) {
         text: info.otu_labels,
         mode: 'markers',
         marker: {
-            color: getBubbleColors(info.otu_ids),
+            color: getBubbleChartColors(info.otu_ids),
             size: info.sample_values 
         }
     }];
