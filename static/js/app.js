@@ -252,10 +252,19 @@ function updateBarChart(sample) {
         type: 'bar',
         orientation: 'h'
     }];
+
+    let layout = {
+        height: 425,
+        width: 500,
+        margin: {
+            l: 120, // Create gap between demographic info and chart,
+            t: 0, // Align chart with top of subject drop down
+            b: 25 // Reduce gap with bubble chart
+        }
+    };
     
     // Update chart
-    // Note: Restyling the chart requir
-    Plotly.react('bar', update);
+    Plotly.react('bar', update, layout);
 }
 
 // Function to update bubble chart when test subject is changed
