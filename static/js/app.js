@@ -193,7 +193,7 @@ function createBarChart(sample) {
     console.log('Initial Bar Chart Data:', data)
      
     let layout = {
-        height: 500,
+        height: 425,
         width: 500,
         margin: {
             l: 120, // Create gap between demographic info and chart,
@@ -228,7 +228,7 @@ function createBubbleChart(sample) {
     console.log('Initial Bubble Chart Data:', data)
 
     let layout = {
-        height: 500,
+        height: 625,
         width: 1200,
         margin: {
             t: 25
