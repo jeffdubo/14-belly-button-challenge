@@ -166,9 +166,9 @@ function getBubbleChartColors(otu_ids) {
     // Loop through each id
     for (i=0; i<otu_ids.length; i++) {
         // Calculate color and add to array of colors
-        // Note: The otu_id the max ID (3450) divided by the last color array index (39) is 88
-        // Dividing by 88 ensures the calculation is a valid array index and sets the color based on the otu_id
-        otu_colors.push(bubbleColors[Math.round(otu_ids[i] / 88)]); 
+        // Note: The otu_id the max ID (3450) divided by the last color array index (39) is 89
+        // Dividing by 89 ensures the calculation is a valid array index and sets the color based on the otu_id
+        otu_colors.push(bubbleColors[Math.round(otu_ids[i] / 89)]); 
     };
 
     return otu_colors;
